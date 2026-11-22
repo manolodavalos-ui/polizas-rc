@@ -1,21 +1,21 @@
-import { createClient } from "@/lib/supabase/server";
-import { getDiasAviso } from "@/lib/config";
-import { estadoPoliza, type Asegurado } from "@/lib/polizas";
+"use client";
+import { getDiasAviso, listarAsegurados, listarPolizas } from "@/lib/datos";
+import { useCarga } from "@/lib/useCarga";
+import { estadoPoliza } from "@/lib/polizas";
 import ListaAsegurados from "@/components/ListaAsegurados";
+import Cargando from "@/components/Cargando";
 
-export const dynamic = "force-dynamic";
-
-export default async function AseguradosPage() {
-  const supabase = await createClient();
-  const diasAviso = await getDiasAviso();
-  const { data } = await supabase.from("asegurados").select("*, polizas(fin_vigencia)").order("nombre");
-  const filas = ((data ?? []) as (Asegurado & { polizas: { fin_vigencia: string }[] })[]).map((a) => {
-    const estados = a.polizas.map((p) => estadoPoliza(p.fin_vigencia, diasAviso));
+export default function AseguradosPage() {
+  const { data, error } = useCarga(() => Promise.all([listarAsegurados(), listarPolizas(), getDiasAviso()]));
+  if (!data) return <Cargando error={error} />;
+  const [asegurados, polizas, diasAviso] = data;
+  const filas = asegurados.map((a) => {
+    const estados = polizas.filter((p) => p.asegurado_id === a.id).map((p) => estadoPoliza(p.fin_vigencia, diasAviso));
     return {
       id: a.id,
       nombre: a.nombre,
       fecha_nacimiento: a.fecha_nacimiento,
-      total: a.polizas.length,
+      total: estados.length,
       porVencer: estados.filter((e) => e === "por_vencer").length,
       vencidas: estados.filter((e) => e === "vencida").length,
     };

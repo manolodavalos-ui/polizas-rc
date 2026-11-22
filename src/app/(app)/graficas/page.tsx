@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
-import { getDiasAviso } from "@/lib/config";
+"use client";
+import { getDiasAviso, listarPolizas } from "@/lib/datos";
+import { useCarga } from "@/lib/useCarga";
+import Cargando from "@/components/Cargando";
 import { ESTADO_INFO, estadoPoliza, fmtMoneda, hoyISO, type Poliza } from "@/lib/polizas";
 import Graficas, { type Serie } from "@/components/Graficas";
-
-export const dynamic = "force-dynamic";
 
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
@@ -13,11 +13,10 @@ function agrupar(polizas: Poliza[], key: (p: Poliza) => string, val: (p: Poliza)
   return [...m.entries()].map(([nombre, valor]) => ({ nombre, valor: Math.round(valor * 100) / 100 })).sort((a, b) => b.valor - a.valor);
 }
 
-export default async function GraficasPage() {
-  const supabase = await createClient();
-  const diasAviso = await getDiasAviso();
-  const { data } = await supabase.from("polizas").select("*");
-  const polizas = (data ?? []) as Poliza[];
+export default function GraficasPage() {
+  const { data, error } = useCarga(() => Promise.all([listarPolizas(), getDiasAviso()]));
+  if (!data) return <Cargando error={error} />;
+  const [polizas, diasAviso] = data;
 
   const [hy, hm] = hoyISO().split("-").map(Number);
   const vencimientos: Serie = Array.from({ length: 12 }, (_, i) => {

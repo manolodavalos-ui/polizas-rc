@@ -3,8 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { subirDocumentos } from "@/lib/subir";
+import { crearAsegurado, crearPoliza, eliminarAsegurado, subirDocumentos } from "@/lib/datos";
 import AseguradoCamposForm, { aseguradoVacio, limpiarAsegurado } from "./AseguradoCampos";
 import PolizaCamposForm, { limpiarPoliza, polizaVacia } from "./PolizaForm";
 
@@ -21,27 +20,25 @@ export default function NuevoForm({ existente }: { existente: { id: string; nomb
     e.preventDefault();
     setBusy(true);
     setError("");
-    const supabase = createClient();
     let creadoId: string | null = null;
     try {
+      const datosAseg = limpiarAsegurado(aseg);
       let aseguradoId = existente?.id;
-      if (!aseguradoId) {
-        const { data, error } = await supabase.from("asegurados").insert(limpiarAsegurado(aseg)).select("id").single();
-        if (error) throw error;
-        aseguradoId = creadoId = data.id;
-      }
-      const { data: p, error } = await supabase.from("polizas").insert({ ...limpiarPoliza(pol), asegurado_id: aseguradoId }).select("id").single();
-      if (error) throw error;
+      if (!aseguradoId) aseguradoId = creadoId = await crearAsegurado(datosAseg);
+      const polizaId = await crearPoliza({
+        ...limpiarPoliza(pol),
+        asegurado_id: aseguradoId,
+        asegurado_nombre: existente?.nombre ?? datosAseg.nombre,
+      });
       const archivos = [
         ...(pdfPoliza ? [{ file: pdfPoliza, tipo: "poliza" }] : []),
         ...(pdfTarjeta ? [{ file: pdfTarjeta, tipo: "tarjeta" }] : []),
       ];
-      await subirDocumentos(supabase, archivos, { poliza_id: p.id, asegurado_id: aseguradoId });
+      await subirDocumentos(archivos, { poliza_id: polizaId, asegurado_id: aseguradoId });
       router.push(`/asegurados/${aseguradoId}`);
-      router.refresh();
     } catch (err) {
       // Si falló al crear un asegurado nuevo, no dejarlo a medias
-      if (creadoId) await supabase.from("asegurados").delete().eq("id", creadoId);
+      if (creadoId) await eliminarAsegurado(creadoId).catch(() => undefined);
       setError((err as Error).message);
       setBusy(false);
     }

@@ -1,28 +1,25 @@
+"use client";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { use } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import { getDiasAviso } from "@/lib/config";
-import { conUrls } from "@/lib/docs-server";
-import { edad, estadoPoliza, fmtFecha, type Asegurado, type Documento, type Poliza } from "@/lib/polizas";
+import { getAsegurado, getDiasAviso, listarDocumentos, listarPolizas } from "@/lib/datos";
+import { useCarga } from "@/lib/useCarga";
+import { edad, estadoPoliza, fmtFecha } from "@/lib/polizas";
 import TablaPolizas from "@/components/TablaPolizas";
 import Documentos from "@/components/Documentos";
 import EditarAsegurado from "@/components/EditarAsegurado";
+import Cargando from "@/components/Cargando";
 
-export const dynamic = "force-dynamic";
-
-export default async function AseguradoDetalle({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const { data: a } = await supabase.from("asegurados").select("*").eq("id", id).maybeSingle<Asegurado>();
-  if (!a) notFound();
-  const diasAviso = await getDiasAviso();
-  const [{ data: pol }, { data: docs }] = await Promise.all([
-    supabase.from("polizas").select("*").eq("asegurado_id", id).order("fin_vigencia"),
-    supabase.from("documentos").select("*").eq("asegurado_id", id).is("poliza_id", null).order("created_at"),
-  ]);
-  const filas = ((pol ?? []) as Poliza[]).map((p) => ({ ...p, estado: estadoPoliza(p.fin_vigencia, diasAviso) }));
-  const docsUrl = await conUrls(supabase, (docs ?? []) as Documento[]);
+export default function AseguradoDetalle({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const { data, error, recargar } = useCarga(
+    () => Promise.all([getAsegurado(id), listarPolizas(id), getDiasAviso(), listarDocumentos({ asegurado_id: id })]),
+    [id],
+  );
+  if (!data) return <Cargando error={error} />;
+  const [a, pol, diasAviso, docs] = data;
+  if (!a) return <p className="card text-sm">Este asegurado no existe. <Link className="text-brand" href="/asegurados">Volver</Link></p>;
+  const filas = pol.map((p) => ({ ...p, estado: estadoPoliza(p.fin_vigencia, diasAviso) }));
   const e = edad(a.fecha_nacimiento);
 
   return (
@@ -37,7 +34,7 @@ export default async function AseguradoDetalle({ params }: { params: Promise<{ i
           </p>
         </div>
         <div className="flex gap-2">
-          <EditarAsegurado asegurado={a} />
+          <EditarAsegurado asegurado={a} onGuardado={recargar} />
           <Link href={`/asegurados/nuevo?asegurado=${a.id}`} className="btn-primary"><Plus size={16} /> Agregar póliza</Link>
         </div>
       </div>
@@ -49,7 +46,7 @@ export default async function AseguradoDetalle({ params }: { params: Promise<{ i
 
       <section className="card">
         <h2 className="mb-3 font-semibold">Otros documentos del asegurado</h2>
-        <Documentos docs={docsUrl} aseguradoId={a.id} tipoDefault="otro" />
+        <Documentos docs={docs} aseguradoId={a.id} tipoDefault="otro" onCambio={recargar} />
       </section>
     </div>
   );
