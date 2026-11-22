@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# datos personales de asegurados
+seed/
+*.xlsx
+*.pdf
+!.env.example
