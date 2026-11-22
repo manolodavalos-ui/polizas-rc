@@ -1,21 +1,26 @@
-import { createClient } from "@/lib/supabase/server";
-import { getDiasAviso } from "@/lib/config";
-import { estadoPoliza, type Poliza } from "@/lib/polizas";
+"use client";
+import { use } from "react";
+import { getDiasAviso, listarPolizas } from "@/lib/datos";
+import { useCarga } from "@/lib/useCarga";
+import { estadoPoliza } from "@/lib/polizas";
 import TablaPolizas from "@/components/TablaPolizas";
+import Cargando from "@/components/Cargando";
 
-export const dynamic = "force-dynamic";
-
-export default async function PolizasPage({ searchParams }: { searchParams: Promise<{ estado?: string; ramo?: string }> }) {
-  const sp = await searchParams;
-  const supabase = await createClient();
-  const diasAviso = await getDiasAviso();
-  const { data } = await supabase.from("polizas").select("*, asegurados(nombre)").order("fin_vigencia");
-  const filas = ((data ?? []) as Poliza[]).map((p) => ({ ...p, estado: estadoPoliza(p.fin_vigencia, diasAviso) }));
-
+export default function PolizasPage({ searchParams }: { searchParams: Promise<{ estado?: string; ramo?: string }> }) {
+  const sp = use(searchParams);
+  const { data, error } = useCarga(() => Promise.all([listarPolizas(), getDiasAviso()]));
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Pólizas</h1>
-      <TablaPolizas filas={filas} estadoInicial={sp.estado ?? ""} ramoInicial={sp.ramo ?? ""} />
+      {data ? (
+        <TablaPolizas
+          filas={data[0].map((p) => ({ ...p, estado: estadoPoliza(p.fin_vigencia, data[1]) }))}
+          estadoInicial={sp.estado ?? ""}
+          ramoInicial={sp.ramo ?? ""}
+        />
+      ) : (
+        <Cargando error={error} />
+      )}
     </div>
   );
 }

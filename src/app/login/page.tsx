@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,11 +15,13 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const { error } = await createClient().auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) return setError("Correo o contraseña incorrectos.");
-    router.replace("/");
-    router.refresh();
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.replace("/");
+    } catch {
+      setError("Correo o contraseña incorrectos.");
+      setLoading(false);
+    }
   }
 
   return (

@@ -45,3 +45,5 @@ seed/
 *.xlsx
 *.pdf
 !.env.example
+service-account*.json
+*-firebase-adminsdk-*.json

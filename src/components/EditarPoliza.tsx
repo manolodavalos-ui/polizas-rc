@@ -2,11 +2,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { actualizarPoliza, eliminarPoliza } from "@/lib/datos";
 import type { Poliza } from "@/lib/polizas";
 import PolizaCamposForm, { limpiarPoliza, type PolizaCampos } from "./PolizaForm";
 
-export default function EditarPoliza({ poliza }: { poliza: Poliza }) {
+export default function EditarPoliza({ poliza, onGuardado }: { poliza: Poliza; onGuardado: () => void }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [v, setV] = useState<PolizaCampos>({
@@ -17,20 +17,19 @@ export default function EditarPoliza({ poliza }: { poliza: Poliza }) {
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
-    const { error } = await createClient().from("polizas").update(limpiarPoliza(v)).eq("id", poliza.id);
-    if (error) return setError(error.message);
-    setOpen(false);
-    router.refresh();
+    try {
+      await actualizarPoliza(poliza.id, limpiarPoliza(v));
+      setOpen(false);
+      onGuardado();
+    } catch (err) {
+      setError((err as Error).message);
+    }
   }
 
   async function eliminar() {
     if (!confirm("¿Eliminar esta póliza y sus documentos?")) return;
-    const supabase = createClient();
-    const { data: docs } = await supabase.from("documentos").select("storage_path").eq("poliza_id", poliza.id);
-    if (docs?.length) await supabase.storage.from("documentos").remove(docs.map((d) => d.storage_path));
-    await supabase.from("polizas").delete().eq("id", poliza.id);
+    await eliminarPoliza(poliza.id);
     router.replace(`/asegurados/${poliza.asegurado_id}`);
-    router.refresh();
   }
 
   if (!open) return <button className="btn-ghost px-3 py-1.5" onClick={() => setOpen(true)}><Pencil size={14} /> Editar</button>;

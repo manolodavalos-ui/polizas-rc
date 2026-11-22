@@ -1,20 +1,16 @@
+"use client";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, UserPlus, Users, XCircle } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import { getDiasAviso } from "@/lib/config";
-import { diasRestantes, estadoPoliza, fmtFecha, type Poliza } from "@/lib/polizas";
+import { getDiasAviso, listarPolizas } from "@/lib/datos";
+import { useCarga } from "@/lib/useCarga";
+import { diasRestantes, estadoPoliza, fmtFecha } from "@/lib/polizas";
 import EstadoBadge from "@/components/EstadoBadge";
+import Cargando from "@/components/Cargando";
 
-export const dynamic = "force-dynamic";
-
-export default async function Tablero() {
-  const supabase = await createClient();
-  const diasAviso = await getDiasAviso();
-  const { data } = await supabase
-    .from("polizas")
-    .select("*, asegurados(nombre)")
-    .order("fin_vigencia");
-  const polizas = (data ?? []) as Poliza[];
+export default function Tablero() {
+  const { data, error } = useCarga(() => Promise.all([listarPolizas(), getDiasAviso()]));
+  if (!data) return <Cargando error={error} />;
+  const [polizas, diasAviso] = data;
 
   const conEstado = polizas.map((p) => ({ ...p, estado: estadoPoliza(p.fin_vigencia, diasAviso) }));
   const cuenta = { vigente: 0, por_vencer: 0, vencida: 0 };
@@ -89,7 +85,7 @@ export default async function Tablero() {
                 <li key={p.id}>
                   <Link href={`/polizas/${p.id}`} className="flex items-center justify-between gap-3 py-2.5">
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-medium">{p.asegurados?.nombre}</div>
+                      <div className="truncate text-sm font-medium">{p.asegurado_nombre}</div>
                       <div className="truncate text-xs text-muted">
                         {p.ramo} · {p.aseguradora} · vence {fmtFecha(p.fin_vigencia)} ({d < 0 ? `hace ${-d}` : `en ${d}`} días)
                       </div>

@@ -2,7 +2,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { signOut, updatePassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { setDiasAviso } from "@/lib/datos";
 
 export default function ConfigForm({ diasAviso, email }: { diasAviso: number; email: string }) {
   const router = useRouter();
@@ -12,22 +14,30 @@ export default function ConfigForm({ diasAviso, email }: { diasAviso: number; em
 
   async function guardarDias(e: React.FormEvent) {
     e.preventDefault();
-    const { error } = await createClient().from("configuracion").upsert({ clave: "dias_aviso", valor: String(dias) });
-    setMsg(error ? error.message : "Guardado.");
-    router.refresh();
+    try {
+      await setDiasAviso(dias);
+      setMsg("Guardado.");
+    } catch (err) {
+      setMsg((err as Error).message);
+    }
   }
 
   async function cambiarPass(e: React.FormEvent) {
     e.preventDefault();
-    const { error } = await createClient().auth.updateUser({ password: pass });
-    setMsg(error ? error.message : "Contraseña actualizada.");
+    try {
+      if (!auth.currentUser) return;
+      await updatePassword(auth.currentUser, pass);
+      setMsg("Contraseña actualizada.");
+    } catch (err) {
+      const code = (err as { code?: string }).code;
+      setMsg(code === "auth/requires-recent-login" ? "Por seguridad, cierra sesión y vuelve a entrar antes de cambiar la contraseña." : (err as Error).message);
+    }
     setPass("");
   }
 
   async function salir() {
-    await createClient().auth.signOut();
+    await signOut(auth);
     router.replace("/login");
-    router.refresh();
   }
 
   return (

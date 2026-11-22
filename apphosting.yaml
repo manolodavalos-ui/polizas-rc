@@ -1,0 +1,18 @@
+# Firebase App Hosting. Los valores salen de Configuración del proyecto > Tus apps > App web.
+# Son públicos (la seguridad está en firestore.rules y storage.rules).
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "AIzaSyCctgjyU2uGbelxmzJAx73pjz1tVrn63RA"
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: "polizas-rc.firebaseapp.com"
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "polizas-rc"
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "polizas-rc.firebasestorage.app"
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "474742214591"
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:474742214591:web:5719c2f1b8ed4aa0825b0a"

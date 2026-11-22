@@ -1,15 +1,13 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+import { use } from "react";
+import { getAsegurado } from "@/lib/datos";
+import { useCarga } from "@/lib/useCarga";
 import NuevoForm from "@/components/NuevoForm";
+import Cargando from "@/components/Cargando";
 
-export const dynamic = "force-dynamic";
-
-export default async function NuevoPage({ searchParams }: { searchParams: Promise<{ asegurado?: string }> }) {
-  const { asegurado } = await searchParams;
-  let existente: { id: string; nombre: string } | null = null;
-  if (asegurado) {
-    const supabase = await createClient();
-    const { data } = await supabase.from("asegurados").select("id, nombre").eq("id", asegurado).maybeSingle();
-    existente = data;
-  }
-  return <NuevoForm existente={existente} />;
+export default function NuevoPage({ searchParams }: { searchParams: Promise<{ asegurado?: string }> }) {
+  const { asegurado } = use(searchParams);
+  const { data, error } = useCarga(async () => (asegurado ? await getAsegurado(asegurado) : null), [asegurado]);
+  if (asegurado && data === null) return <Cargando error={error} />;
+  return <NuevoForm existente={data ? { id: data.id, nombre: data.nombre } : null} />;
 }

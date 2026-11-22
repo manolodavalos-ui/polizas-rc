@@ -1,0 +1,16 @@
+rules_version = '2';
+// Solo los usuarios dados de alta en la colección "usuarios" (documento con su UID) pueden leer y escribir.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function autorizado() {
+      return request.auth != null && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+    match /usuarios/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false; // se administran desde la consola o el script
+    }
+    match /{coleccion}/{id} {
+      allow read, write: if coleccion != "usuarios" && autorizado();
+    }
+  }
+}

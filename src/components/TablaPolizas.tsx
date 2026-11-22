@@ -22,7 +22,7 @@ export default function TablaPolizas({ filas, estadoInicial = "", ramoInicial = 
     if (estado && f.estado !== estado) return false;
     if (ramo && f.ramo !== ramo) return false;
     if (q) {
-      const t = `${f.asegurados?.nombre} ${f.numero_poliza} ${f.certificado ?? ""} ${f.aseguradora}`.toLowerCase();
+      const t = `${f.asegurado_nombre} ${f.numero_poliza} ${f.certificado ?? ""} ${f.aseguradora}`.toLowerCase();
       if (!t.includes(q.toLowerCase())) return false;
     }
     return true;
@@ -31,7 +31,7 @@ export default function TablaPolizas({ filas, estadoInicial = "", ramoInicial = 
   function exportarCSV() {
     const enc = ["Asegurado", "Ramo", "Aseguradora", "Póliza", "Certificado", "Inicio", "Fin", "Prima", "Estado"];
     const rows = visibles.map((f) => [
-      f.asegurados?.nombre ?? "", f.ramo, f.aseguradora, f.numero_poliza, f.certificado ?? "",
+      f.asegurado_nombre ?? "", f.ramo, f.aseguradora, f.numero_poliza, f.certificado ?? "",
       fmtFecha(f.inicio_vigencia), fmtFecha(f.fin_vigencia), f.prima ?? "", ESTADO_INFO[f.estado].label,
     ]);
     const csv = [enc, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -82,7 +82,7 @@ export default function TablaPolizas({ filas, estadoInicial = "", ramoInicial = 
           <tbody className="divide-y divide-line">
             {visibles.map((f) => (
               <tr key={f.id} className="hover:bg-black/[.02] dark:hover:bg-white/[.03]">
-                {!ocultarAsegurado && <td className="p-3"><Link className="font-medium hover:text-brand" href={`/polizas/${f.id}`}>{f.asegurados?.nombre}</Link></td>}
+                {!ocultarAsegurado && <td className="p-3"><Link className="font-medium hover:text-brand" href={`/polizas/${f.id}`}>{f.asegurado_nombre}</Link></td>}
                 <td className="p-3">{f.ramo}</td>
                 <td className="p-3">{f.aseguradora}</td>
                 <td className="p-3"><Link className="hover:text-brand" href={`/polizas/${f.id}`}>{f.numero_poliza}{f.certificado ? ` / ${f.certificado}` : ""}</Link></td>
@@ -101,7 +101,7 @@ export default function TablaPolizas({ filas, estadoInicial = "", ramoInicial = 
           <li key={f.id}>
             <Link href={`/polizas/${f.id}`} className="card block space-y-1">
               <div className="flex items-start justify-between gap-2">
-                <span className="font-medium">{ocultarAsegurado ? f.ramo : f.asegurados?.nombre}</span>
+                <span className="font-medium">{ocultarAsegurado ? f.ramo : f.asegurado_nombre}</span>
                 <EstadoBadge estado={f.estado} />
               </div>
               <div className="text-xs text-muted">{ocultarAsegurado ? "" : `${f.ramo} · `}{f.aseguradora} · {f.numero_poliza}{f.certificado ? ` / ${f.certificado}` : ""}</div>

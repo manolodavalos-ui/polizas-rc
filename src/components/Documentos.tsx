@@ -1,20 +1,17 @@
 "use client";
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { FileText, Trash2, Upload } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { subirDocumentos } from "@/lib/subir";
-import type { Documento } from "@/lib/polizas";
+import { eliminarDocumento, subirDocumentos, type DocConUrl } from "@/lib/datos";
 
 const TIPOS: Record<string, string> = { poliza: "Póliza", tarjeta: "Tarjeta médica", excel: "Excel", otro: "Otro" };
 
-export default function Documentos({ docs, polizaId = null, aseguradoId = null, tipoDefault = "poliza" }: {
-  docs: (Documento & { url: string | null })[];
+export default function Documentos({ docs, polizaId = null, aseguradoId = null, tipoDefault = "poliza", onCambio }: {
+  docs: DocConUrl[];
   polizaId?: string | null;
   aseguradoId?: string | null;
   tipoDefault?: string;
+  onCambio: () => void;
 }) {
-  const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [tipo, setTipo] = useState(tipoDefault);
   const [busy, setBusy] = useState(false);
@@ -25,8 +22,8 @@ export default function Documentos({ docs, polizaId = null, aseguradoId = null, 
     setBusy(true);
     setError("");
     try {
-      await subirDocumentos(createClient(), [...files].map((file) => ({ file, tipo })), { poliza_id: polizaId, asegurado_id: aseguradoId });
-      router.refresh();
+      await subirDocumentos([...files].map((file) => ({ file, tipo })), { poliza_id: polizaId, asegurado_id: aseguradoId });
+      onCambio();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -35,12 +32,10 @@ export default function Documentos({ docs, polizaId = null, aseguradoId = null, 
     }
   }
 
-  async function borrar(d: Documento) {
+  async function borrar(d: DocConUrl) {
     if (!confirm(`¿Eliminar "${d.nombre}"?`)) return;
-    const supabase = createClient();
-    await supabase.storage.from("documentos").remove([d.storage_path]);
-    await supabase.from("documentos").delete().eq("id", d.id);
-    router.refresh();
+    await eliminarDocumento(d);
+    onCambio();
   }
 
   return (

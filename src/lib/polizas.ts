@@ -19,7 +19,7 @@ export type Poliza = {
   prima: number | null;
   moneda: string;
   notas: string | null;
-  asegurados?: { nombre: string } | null;
+  asegurado_nombre: string;
 };
 
 export type Documento = {
@@ -29,7 +29,6 @@ export type Documento = {
   tipo: string;
   nombre: string;
   storage_path: string;
-  created_at: string;
 };
 
 export type Estado = "vigente" | "por_vencer" | "vencida";
