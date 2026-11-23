@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { BarChart3, FileText, LayoutDashboard, Menu, Settings, Users, X } from "lucide-react";
+import { BarChart3, FileText, Info, LayoutDashboard, Menu, Settings, Users, X } from "lucide-react";
 
 const NAV = [
   { href: "/", label: "Tablero", icon: LayoutDashboard },
@@ -10,6 +10,7 @@ const NAV = [
   { href: "/asegurados", label: "Asegurados", icon: Users },
   { href: "/graficas", label: "Gráficas y análisis", icon: BarChart3 },
   { href: "/configuracion", label: "Configuración", icon: Settings },
+  { href: "/acerca", label: "Acerca de", icon: Info },
 ];
 
 export default function Shell({ children }: { children: React.ReactNode }) {
