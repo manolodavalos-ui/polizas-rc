@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { AlertTriangle, CheckCircle2, UserPlus, Users, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileText, UserPlus, Users, XCircle } from "lucide-react";
 import { getDiasAviso, listarPolizas } from "@/lib/datos";
 import { useCarga } from "@/lib/useCarga";
 import { diasRestantes, estadoPoliza, fmtFecha } from "@/lib/polizas";
@@ -41,6 +41,23 @@ export default function Tablero() {
           <Link href="/asegurados/nuevo" className="btn-primary"><UserPlus size={16} /> Nuevo asegurado</Link>
         </div>
       </div>
+
+      <Link href="/polizas" className="card flex flex-wrap items-center gap-x-6 gap-y-3 transition hover:border-brand/50">
+        <div className="flex items-center gap-4">
+          <FileText className="text-brand" size={32} />
+          <div>
+            <div className="text-3xl font-semibold tabular-nums">{polizas.length}</div>
+            <div className="text-sm text-muted">Total de pólizas cargadas</div>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {ramos.map(([ramo, n]) => (
+            <span key={ramo} className="rounded-full bg-black/5 px-3 py-1 text-sm dark:bg-white/10">
+              {ramo}: <b className="tabular-nums">{n}</b>
+            </span>
+          ))}
+        </div>
+      </Link>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {kpis.map(({ key, label, value, icon: Icon, color }) => (
