@@ -5,7 +5,7 @@ export default function AcercaPage() {
     <div className="mx-auto max-w-3xl space-y-4">
       <div>
         <h1 className="text-2xl font-semibold">Acerca de Pólizas RC</h1>
-        <p className="text-sm text-muted">Administración de pólizas de seguros · versión 1.0</p>
+        <p className="text-sm text-muted">Administración de pólizas de seguros · versión {process.env.NEXT_PUBLIC_APP_VERSION}</p>
       </div>
 
       <section className="card space-y-4">

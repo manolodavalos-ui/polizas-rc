@@ -35,7 +35,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center p-4">
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-4">
       <form onSubmit={onSubmit} className="card w-full max-w-sm space-y-4 p-6">
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -56,6 +56,13 @@ export default function LoginPage() {
         {error && <p className="text-sm text-rose-600">{error}</p>}
         <button className="btn-primary w-full" disabled={loading}>{loading ? "Entrando…" : "Entrar"}</button>
       </form>
+      <footer className="flex flex-col items-center gap-1 text-center text-xs text-muted">
+        <span>Desarrollado por</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/integram.png" alt="INTEGRAM" className="h-8 w-auto rounded bg-white px-2 py-1" />
+        <span>Imagina, crea. · Consultoría y soluciones de IA</span>
+        <span>v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
+      </footer>
     </main>
   );
 }

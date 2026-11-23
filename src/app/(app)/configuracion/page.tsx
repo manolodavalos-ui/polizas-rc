@@ -5,6 +5,7 @@ import { useCarga } from "@/lib/useCarga";
 import Documentos from "@/components/Documentos";
 import ConfigForm from "@/components/ConfigForm";
 import Cargando from "@/components/Cargando";
+import Version from "@/components/Version";
 
 export default function ConfiguracionPage() {
   const { data, error, recargar } = useCarga(() => Promise.all([getDiasAviso(), listarDocumentos({ generales: true })]));
@@ -15,6 +16,7 @@ export default function ConfiguracionPage() {
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Configuración</h1>
       <ConfigForm diasAviso={diasAviso} email={auth.currentUser?.email ?? ""} />
+      <Version />
       <section className="card">
         <h2 className="mb-1 font-semibold">Documentos generales</h2>
         <p className="mb-3 text-sm text-muted">Relaciones en Excel, condiciones generales y otros archivos que no son de una sola póliza.</p>
