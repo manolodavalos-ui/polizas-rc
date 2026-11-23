@@ -33,6 +33,22 @@ async function compartir(d: DocConUrl, avisar: (m: string) => void) {
   }
 }
 
+// Sin conexión: abre el PDF guardado en el equipo
+async function verSinConexion(e: React.MouseEvent, d: DocConUrl, avisar: (m: string) => void) {
+  if (navigator.onLine || !d.url) return;
+  e.preventDefault();
+  const w = window.open("", "_blank");
+  try {
+    const res = await fetch(d.url);
+    if (!res.ok) throw new Error();
+    const url = URL.createObjectURL(await res.blob());
+    if (w) w.location.href = url; else window.location.href = url;
+  } catch {
+    w?.close();
+    avisar("Este documento no está guardado para verlo sin conexión.");
+  }
+}
+
 export default function Documentos({ docs, polizaId = null, aseguradoId = null, tipoDefault = "poliza", onCambio }: {
   docs: DocConUrl[];
   polizaId?: string | null;
@@ -81,7 +97,7 @@ export default function Documentos({ docs, polizaId = null, aseguradoId = null, 
             </div>
             {d.url && (
               <>
-                <a href={d.url} target="_blank" rel="noreferrer" aria-label="Ver" title="Ver" className="rounded p-1.5 text-muted hover:text-brand">
+                <a href={d.url} target="_blank" rel="noreferrer" aria-label="Ver" title="Ver" onClick={(e) => verSinConexion(e, d, setMsg)} className="rounded p-1.5 text-muted hover:text-brand">
                   <Eye size={18} />
                 </a>
                 <button aria-label="Compartir" title="Compartir" className="rounded p-1.5 text-muted hover:text-brand" onClick={() => compartir(d, setMsg)}>

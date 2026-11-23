@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Sin "jalar para refrescar" en móvil */
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
 
 
 :root {

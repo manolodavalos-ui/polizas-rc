@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import BotonAtras from "./BotonAtras";
 import { BarChart3, FileText, Info, LayoutDashboard, Menu, Settings, Users, X } from "lucide-react";
 
 const NAV = [
@@ -71,6 +72,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
+      <BotonAtras />
       <main className="mx-auto w-full min-w-0 max-w-6xl flex-1 p-4 lg:p-8">{children}</main>
     </div>
   );

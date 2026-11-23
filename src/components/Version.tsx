@@ -12,8 +12,9 @@ function fecha(iso: string) {
 
 async function recargar() {
   try {
-    if ("caches" in window) for (const k of await caches.keys()) await caches.delete(k);
-    if ("serviceWorker" in navigator) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+    // Conserva los PDFs guardados para uso sin conexión
+    if ("caches" in window) for (const k of await caches.keys()) if (k !== "rc-pdfs") await caches.delete(k);
+    if ("serviceWorker" in navigator) for (const r of await navigator.serviceWorker.getRegistrations()) await r.update();
   } catch {}
   window.location.reload();
 }

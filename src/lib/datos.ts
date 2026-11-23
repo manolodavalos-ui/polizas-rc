@@ -79,7 +79,29 @@ export async function listarDocumentos(filtro: { poliza_id?: string; asegurado_i
   else q = query(collection(db, "documentos"), where("asegurado_id", "==", null), where("poliza_id", "==", null));
   const s = await getDocs(q);
   const docs = s.docs.map((d) => conId<Omit<Documento, "id">>(d)).sort((a, b) => a.nombre.localeCompare(b.nombre));
-  return Promise.all(docs.map(async (d) => ({ ...d, url: await getDownloadURL(ref(storage, d.storage_path)).catch(() => null) })));
+  return Promise.all(docs.map(async (d) => ({ ...d, url: await urlArchivo(d.storage_path) })));
+}
+
+// Recuerda los enlaces de descarga para poder abrir PDFs guardados sin conexión.
+const URLS_KEY = "polizas-rc-urls";
+function leerUrls(): Record<string, string> {
+  try { return JSON.parse(localStorage.getItem(URLS_KEY) ?? "{}"); } catch { return {}; }
+}
+export async function urlArchivo(path: string): Promise<string | null> {
+  try {
+    const url = await getDownloadURL(ref(storage, path));
+    try { const m = leerUrls(); if (m[path] !== url) { m[path] = url; localStorage.setItem(URLS_KEY, JSON.stringify(m)); } } catch {}
+    return url;
+  } catch {
+    return leerUrls()[path] ?? null;
+  }
+}
+
+/** Todos los documentos (para descargarlos y usarlos sin conexión). */
+export async function listarTodosDocumentos(): Promise<DocConUrl[]> {
+  const s = await getDocs(collection(db, "documentos"));
+  const docs = s.docs.map((d) => conId<Omit<Documento, "id">>(d));
+  return Promise.all(docs.map(async (d) => ({ ...d, url: await urlArchivo(d.storage_path) })));
 }
 
 /** Sube archivos a Storage y registra cada uno en la colección documentos. */
