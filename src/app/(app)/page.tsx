@@ -1,9 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { AlertTriangle, CheckCircle2, FileText, LogOut, UserPlus, Users, XCircle } from "lucide-react";
+import BotonSalir from "@/components/BotonSalir";
+import { AlertTriangle, CheckCircle2, FileText, UserPlus, Users, XCircle } from "lucide-react";
 import { getDiasAviso, listarPolizas } from "@/lib/datos";
 import { useCarga } from "@/lib/useCarga";
 import { diasRestantes, estadoPoliza, fmtFecha } from "@/lib/polizas";
@@ -11,7 +9,6 @@ import EstadoBadge from "@/components/EstadoBadge";
 import Cargando from "@/components/Cargando";
 
 export default function Tablero() {
-  const router = useRouter();
   const { data, error } = useCarga(() => Promise.all([listarPolizas(), getDiasAviso()]));
   if (!data) return <Cargando error={error} />;
   const [polizas, diasAviso] = data;
@@ -41,16 +38,7 @@ export default function Tablero() {
           <p className="text-sm text-muted">{polizas.length} pólizas registradas</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            className="btn-ghost text-rose-600"
-            onClick={async () => {
-              if (!confirm("¿Cerrar sesión?")) return;
-              await signOut(auth);
-              router.replace("/login");
-            }}
-          >
-            <LogOut size={16} /> Salir
-          </button>
+          <div className="hidden lg:block"><BotonSalir /></div>
           <Link href="/asegurados" className="btn-ghost"><Users size={16} /> Ver asegurados</Link>
           <Link href="/asegurados/nuevo" className="btn-primary"><UserPlus size={16} /> Nuevo asegurado</Link>
         </div>

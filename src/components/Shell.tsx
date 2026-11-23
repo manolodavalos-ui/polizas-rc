@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import BotonAtras from "./BotonAtras";
+import BotonSalir from "./BotonSalir";
 import { BarChart3, FileText, Info, LayoutDashboard, Menu, Settings, Users, X } from "lucide-react";
 
 const NAV = [
@@ -56,6 +57,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           <Menu />
         </button>
         {brand}
+        {pathname === "/" && <BotonSalir className="ml-auto" />}
       </header>
 
       {open && (
