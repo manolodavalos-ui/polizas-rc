@@ -35,7 +35,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   );
 
   const brand = (
-    <Link href="/" className="flex items-center gap-2 px-5 py-4 text-lg font-semibold">
+    <Link href="/" className="flex items-center gap-2 px-3 py-4 text-lg font-semibold lg:px-5">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icon.svg" alt="" className="h-8 w-8" /> Pólizas RC
     </Link>
@@ -48,22 +48,22 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         {nav}
       </aside>
 
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-card px-2 lg:hidden">
-        {brand}
+      <header className="sticky top-0 z-20 flex items-center border-b border-line bg-card px-2 lg:hidden">
         <button aria-label="Abrir menú" className="rounded-lg p-2" onClick={() => setOpen(true)}>
           <Menu />
         </button>
+        {brand}
       </header>
 
       {open && (
         <div className="fixed inset-0 z-30 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-72 bg-card shadow-xl">
-            <div className="flex items-center justify-between pr-2">
-              {brand}
+            <div className="flex items-center pl-2">
               <button aria-label="Cerrar menú" className="rounded-lg p-2" onClick={() => setOpen(false)}>
                 <X />
               </button>
+              {brand}
             </div>
             {nav}
           </aside>
