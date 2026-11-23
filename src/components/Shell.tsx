@@ -40,6 +40,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     <Link href="/" className="flex items-center gap-2 px-3 py-4 text-lg font-semibold lg:px-5">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icon.svg" alt="" className="h-8 w-8" /> Pólizas RC
+      <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-normal text-muted dark:bg-white/10">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
     </Link>
   );
 

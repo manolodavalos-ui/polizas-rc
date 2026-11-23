@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
  * - Fuera del tablero: siempre regresa al tablero.
  * - En el tablero: pregunta si desea salir.
  */
-export default function BotonAtras() {
+export default function BotonAtras({ inicio = "/" }: { inicio?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const ruta = useRef(pathname);
@@ -16,11 +16,17 @@ export default function BotonAtras() {
 
   useEffect(() => {
     ruta.current = pathname;
-    // En el tablero agrega una entrada "guardia" para atrapar el atrás
-    if (pathname === "/" && !window.history.state?.__guardia) {
-      window.history.pushState({ ...window.history.state, __guardia: true }, "");
-    }
-  }, [pathname]);
+    // En el tablero agrega una entrada "guardia" para atrapar el atrás.
+    // Se repite al tocar la pantalla: Chrome ignora entradas creadas sin interacción del usuario.
+    const guardia = () => {
+      if (ruta.current === inicio && !saliendo.current && !window.history.state?.__guardia) {
+        window.history.pushState({ ...window.history.state, __guardia: true }, "");
+      }
+    };
+    guardia();
+    window.addEventListener("pointerdown", guardia, true);
+    return () => window.removeEventListener("pointerdown", guardia, true);
+  }, [pathname, inicio]);
 
   useEffect(() => {
     function onPop(e: PopStateEvent) {
@@ -30,15 +36,15 @@ export default function BotonAtras() {
         return;
       }
       e.stopImmediatePropagation();
-      if (ruta.current === "/") {
+      if (ruta.current === inicio) {
         setPreguntar(true);
       } else {
-        router.replace("/");
+        router.replace(inicio);
       }
     }
     window.addEventListener("popstate", onPop, true);
     return () => window.removeEventListener("popstate", onPop, true);
-  }, [router]);
+  }, [router, inicio]);
 
   function quedarse() {
     setPreguntar(false);
