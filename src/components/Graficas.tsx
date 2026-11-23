@@ -28,7 +28,7 @@ export default function Graficas({ bloques }: { bloques: Bloque[] }) {
                   ) : (
                     <>
                       <XAxis type="number" allowDecimals={false} tickFormatter={b.tipo === "moneda" ? fmtCorto : undefined} tick={{ fontSize: 11, fill: "var(--muted)" }} stroke="var(--border)" />
-                      <YAxis type="category" dataKey="nombre" width={b.ancho ? 130 : 150} tick={{ fontSize: 12, fill: "var(--fg)" }} stroke="var(--border)" />
+                      <YAxis type="category" dataKey="nombre" interval={0} width={b.ancho ? 130 : 150} tick={{ fontSize: 12, fill: "var(--fg)" }} stroke="var(--border)" />
                     </>
                   )}
                   <Tooltip
