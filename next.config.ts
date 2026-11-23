@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
-import pkg from "./package.json";
+import { VERSION_ACTUAL } from "./src/lib/cambios";
 
 const nextConfig: NextConfig = {
   env: {
-    NEXT_PUBLIC_APP_VERSION: pkg.version,
+    NEXT_PUBLIC_APP_VERSION: VERSION_ACTUAL,
     NEXT_PUBLIC_BUILD_ID: new Date().toISOString(),
   },
 };

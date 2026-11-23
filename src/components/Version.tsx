@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { History, RefreshCw } from "lucide-react";
+import { CAMBIOS } from "@/lib/cambios";
 
-const VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "1.0.0";
+const VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? CAMBIOS[0].version;
 const BUILD = process.env.NEXT_PUBLIC_BUILD_ID ?? "";
 
 function fecha(iso: string) {
@@ -21,6 +22,7 @@ async function recargar() {
 
 export default function Version() {
   const [estado, setEstado] = useState<"" | "buscando" | "nueva" | "al-dia" | "error">("");
+  const [historial, setHistorial] = useState(false);
   const [remota, setRemota] = useState<{ version?: string; build?: string }>({});
 
   async function buscar() {
@@ -56,6 +58,26 @@ export default function Version() {
           {estado === "buscando" ? "Buscando…" : "Buscar actualización"}
         </button>
       )}
+      <div className="border-t border-line pt-3">
+        <button className="btn-ghost" onClick={() => setHistorial(!historial)}>
+          <History size={16} /> {historial ? "Ocultar historial" : "Ver historial de versiones"}
+        </button>
+        {historial && (
+          <ol className="mt-3 space-y-3">
+            {CAMBIOS.map((c) => (
+              <li key={c.version} className="text-sm">
+                <div className="font-medium">
+                  v{c.version} <span className="font-normal text-muted">· {c.fecha.split("-").reverse().join("/")}</span>
+                  {c.version === VERSION && <span className="ml-2 rounded-full bg-brand/10 px-2 py-0.5 text-xs text-brand">actual</span>}
+                </div>
+                <ul className="ml-4 list-disc text-muted">
+                  {c.cambios.map((t) => <li key={t}>{t}</li>)}
+                </ul>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
     </section>
   );
 }
