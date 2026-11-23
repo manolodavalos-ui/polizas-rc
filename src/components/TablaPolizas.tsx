@@ -65,8 +65,18 @@ export default function TablaPolizas({ filas, estadoInicial = "", ramoInicial = 
 
       <p className="text-xs text-muted">{visibles.length} de {filas.length} pólizas</p>
 
+      {visibles.length === 0 && (
+        <p className="card text-sm text-muted">
+          {estado === "vencida" && !q && !ramo
+            ? "De momento no hay pólizas vencidas."
+            : estado === "por_vencer" && !q && !ramo
+              ? "De momento no hay pólizas próximas a vencer."
+              : "No hay pólizas que coincidan con los filtros."}
+        </p>
+      )}
+
       {/* Tabla en PC */}
-      <div className="card hidden overflow-x-auto p-0 md:block">
+      <div className={`card overflow-x-auto p-0 ${visibles.length ? "hidden md:block" : "hidden"}`}>
         <table className="w-full text-sm">
           <thead className="border-b border-line text-left text-xs uppercase text-muted">
             <tr>

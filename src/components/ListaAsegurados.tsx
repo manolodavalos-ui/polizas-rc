@@ -4,16 +4,30 @@ import { useState } from "react";
 import { ChevronRight, Search, UserPlus } from "lucide-react";
 import { edad } from "@/lib/polizas";
 
-type Fila = { id: string; nombre: string; fecha_nacimiento: string | null; total: number; porVencer: number; vencidas: number };
+type Fila = { id: string; nombre: string; fecha_nacimiento: string | null; total: number; porVencer: number; vencidas: number; ramos: string[] };
 
 export default function ListaAsegurados({ filas }: { filas: Fila[] }) {
   const [q, setQ] = useState("");
-  const visibles = filas.filter((f) => f.nombre.toLowerCase().includes(q.toLowerCase()));
+  const [ramo, setRamo] = useState("");
+  const ramos = [...new Set(filas.flatMap((f) => f.ramos))].sort();
+  const chips = [{ k: "", label: "Todos", n: filas.length }, ...ramos.map((r) => ({ k: r, label: r, n: filas.filter((f) => f.ramos.includes(r)).length }))];
+  const visibles = filas.filter((f) => (!ramo || f.ramos.includes(ramo)) && f.nombre.toLowerCase().includes(q.toLowerCase()));
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Asegurados</h1>
         <Link href="/asegurados/nuevo" className="btn-primary"><UserPlus size={16} /> Nuevo asegurado</Link>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {chips.map((c) => (
+          <button
+            key={c.k}
+            onClick={() => setRamo(c.k)}
+            className={`rounded-full border px-3 py-1 text-sm transition ${ramo === c.k ? "border-brand bg-brand text-white" : "border-line bg-card hover:border-brand/50"}`}
+          >
+            {c.label} <b className="tabular-nums">{c.n}</b>
+          </button>
+        ))}
       </div>
       <div className="relative">
         <Search size={16} className="absolute left-3 top-2.5 text-muted" />

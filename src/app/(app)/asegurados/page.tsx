@@ -16,6 +16,7 @@ export default function AseguradosPage() {
       nombre: a.nombre,
       fecha_nacimiento: a.fecha_nacimiento,
       total: estados.length,
+      ramos: [...new Set(polizas.filter((p) => p.asegurado_id === a.id).map((p) => p.ramo))],
       porVencer: estados.filter((e) => e === "por_vencer").length,
       vencidas: estados.filter((e) => e === "vencida").length,
     };

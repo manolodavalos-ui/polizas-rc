@@ -9,6 +9,7 @@ import EstadoBadge from "@/components/EstadoBadge";
 import Documentos from "@/components/Documentos";
 import EditarPoliza from "@/components/EditarPoliza";
 import Cargando from "@/components/Cargando";
+import CopiarTexto from "@/components/CopiarTexto";
 
 export default function PolizaDetalle({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -34,13 +35,16 @@ export default function PolizaDetalle({ params }: { params: Promise<{ id: string
       <Link href="/polizas" className="inline-flex items-center gap-1 text-sm text-muted hover:text-fg"><ArrowLeft size={16} /> Pólizas</Link>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">{p.ramo} · {p.numero_poliza}</h1>
-          <Link href={`/asegurados/${p.asegurado_id}`} className="text-sm text-brand hover:underline">{p.asegurado_nombre}</Link>
+          <Link href={`/asegurados/${p.asegurado_id}`} className="text-2xl font-semibold hover:text-brand">{p.asegurado_nombre}</Link>
+          <div className="mt-1 flex flex-wrap items-center gap-1 text-muted">
+            <span>{p.ramo} · {p.numero_poliza}</span>
+            <CopiarTexto texto={p.numero_poliza} />
+          </div>
         </div>
         <EstadoBadge estado={estadoPoliza(p.fin_vigencia, diasAviso)} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <section className="card">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-semibold">Datos</h2>

@@ -1,9 +1,37 @@
 "use client";
 import { useRef, useState } from "react";
-import { FileText, Trash2, Upload } from "lucide-react";
+import { Eye, FileText, Plus, Share2, Trash2, Upload, X } from "lucide-react";
 import { eliminarDocumento, subirDocumentos, type DocConUrl } from "@/lib/datos";
 
 const TIPOS: Record<string, string> = { poliza: "Póliza", tarjeta: "Tarjeta médica", excel: "Excel", otro: "Otro" };
+
+async function compartir(d: DocConUrl, avisar: (m: string) => void) {
+  if (!d.url) return;
+  try {
+    // Intenta compartir el archivo (WhatsApp, correo, etc.)
+    if (navigator.canShare) {
+      try {
+        const blob = await (await fetch(d.url)).blob();
+        const file = new File([blob], d.nombre, { type: blob.type || "application/pdf" });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: d.nombre });
+          return;
+        }
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return;
+      }
+    }
+    // Si no se puede el archivo, comparte el enlace
+    if (navigator.share) {
+      await navigator.share({ title: d.nombre, url: d.url });
+      return;
+    }
+    await navigator.clipboard.writeText(d.url);
+    avisar("Enlace copiado. Pégalo donde quieras compartirlo.");
+  } catch (e) {
+    if ((e as Error).name !== "AbortError") avisar("No se pudo compartir.");
+  }
+}
 
 export default function Documentos({ docs, polizaId = null, aseguradoId = null, tipoDefault = "poliza", onCambio }: {
   docs: DocConUrl[];
@@ -14,18 +42,20 @@ export default function Documentos({ docs, polizaId = null, aseguradoId = null, 
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [tipo, setTipo] = useState(tipoDefault);
+  const [abierto, setAbierto] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [msg, setMsg] = useState("");
 
   async function onFiles(files: FileList | null) {
     if (!files?.length) return;
     setBusy(true);
-    setError("");
+    setMsg("");
     try {
       await subirDocumentos([...files].map((file) => ({ file, tipo })), { poliza_id: polizaId, asegurado_id: aseguradoId });
+      setAbierto(false);
       onCambio();
     } catch (e) {
-      setError((e as Error).message);
+      setMsg((e as Error).message);
     } finally {
       setBusy(false);
       if (input.current) input.current.value = "";
@@ -39,36 +69,58 @@ export default function Documentos({ docs, polizaId = null, aseguradoId = null, 
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {docs.length === 0 && <p className="text-sm text-muted">Sin documentos.</p>}
       <ul className="divide-y divide-line">
         {docs.map((d) => (
-          <li key={d.id} className="flex items-center gap-3 py-2">
+          <li key={d.id} className="flex items-center gap-2 py-2">
             <FileText size={18} className="shrink-0 text-brand" />
             <div className="min-w-0 flex-1">
-              {d.url ? (
-                <a href={d.url} target="_blank" rel="noreferrer" className="block truncate text-sm font-medium hover:text-brand">{d.nombre}</a>
-              ) : (
-                <span className="block truncate text-sm">{d.nombre}</span>
-              )}
+              <span className="block truncate text-sm font-medium">{d.nombre}</span>
               <span className="text-xs text-muted">{TIPOS[d.tipo] ?? d.tipo}</span>
             </div>
-            <button aria-label="Eliminar" className="rounded p-1.5 text-muted hover:text-rose-600" onClick={() => borrar(d)}>
-              <Trash2 size={16} />
+            {d.url && (
+              <>
+                <a href={d.url} target="_blank" rel="noreferrer" aria-label="Ver" title="Ver" className="rounded p-1.5 text-muted hover:text-brand">
+                  <Eye size={18} />
+                </a>
+                <button aria-label="Compartir" title="Compartir" className="rounded p-1.5 text-muted hover:text-brand" onClick={() => compartir(d, setMsg)}>
+                  <Share2 size={18} />
+                </button>
+              </>
+            )}
+            <button aria-label="Eliminar" title="Eliminar" className="rounded p-1.5 text-muted hover:text-rose-600" onClick={() => borrar(d)}>
+              <Trash2 size={18} />
             </button>
           </li>
         ))}
       </ul>
-      <div className="flex flex-wrap items-center gap-2">
-        <select className="input w-auto" value={tipo} onChange={(e) => setTipo(e.target.value)}>
-          {Object.entries(TIPOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
-        <input ref={input} type="file" multiple accept=".pdf,.xlsx,.xls,.csv,image/*" className="hidden" onChange={(e) => onFiles(e.target.files)} />
-        <button className="btn-ghost" disabled={busy} onClick={() => input.current?.click()}>
-          <Upload size={16} /> {busy ? "Subiendo…" : "Subir archivo"}
-        </button>
+
+      <div className="border-t border-line pt-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold">Agregar más documentos</h3>
+          {abierto ? (
+            <button className="btn-ghost" onClick={() => setAbierto(false)}><X size={16} /> Cancelar</button>
+          ) : (
+            <button className="btn-ghost" onClick={() => setAbierto(true)}><Plus size={16} /> Agregar</button>
+          )}
+        </div>
+        {abierto && (
+          <div className="mt-3 flex flex-wrap items-end gap-2">
+            <div>
+              <label className="label">Tipo de documento</label>
+              <select className="input w-auto" value={tipo} onChange={(e) => setTipo(e.target.value)}>
+                {Object.entries(TIPOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+            <input ref={input} type="file" multiple accept=".pdf,.xlsx,.xls,.csv,image/*" className="hidden" onChange={(e) => onFiles(e.target.files)} />
+            <button className="btn-primary" disabled={busy} onClick={() => input.current?.click()}>
+              <Upload size={16} /> {busy ? "Subiendo…" : "Subir archivo"}
+            </button>
+          </div>
+        )}
       </div>
-      {error && <p className="text-sm text-rose-600">{error}</p>}
+      {msg && <p className="text-sm text-muted">{msg}</p>}
     </div>
   );
 }

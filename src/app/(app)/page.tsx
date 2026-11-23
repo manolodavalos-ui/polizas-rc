@@ -71,8 +71,8 @@ export default function Tablero() {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className="card">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <section className="card min-w-0">
           <h2 className="mb-4 font-semibold">Pólizas por ramo</h2>
           {ramos.length === 0 && <p className="text-sm text-muted">Sin pólizas todavía.</p>}
           <ul className="space-y-3">
@@ -92,7 +92,7 @@ export default function Tablero() {
           </ul>
         </section>
 
-        <section className="card">
+        <section className="card min-w-0">
           <h2 className="mb-4 font-semibold">Requieren atención</h2>
           {atencion.length === 0 && <p className="text-sm text-muted">Todo al día. No hay pólizas por vencer.</p>}
           <ul className="divide-y divide-line">
@@ -100,7 +100,7 @@ export default function Tablero() {
               const d = diasRestantes(p.fin_vigencia);
               return (
                 <li key={p.id}>
-                  <Link href={`/polizas/${p.id}`} className="flex items-center justify-between gap-3 py-2.5">
+                  <Link href={`/polizas/${p.id}`} className="flex min-w-0 items-center justify-between gap-3 py-2.5">
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium">{p.asegurado_nombre}</div>
                       <div className="truncate text-xs text-muted">

@@ -2,16 +2,16 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export type Serie = { nombre: string; valor: number }[];
-type Bloque = { titulo: string; datos: Serie; tipo: "conteo" | "moneda"; vertical?: boolean };
+type Bloque = { titulo: string; datos: Serie; tipo: "conteo" | "moneda"; vertical?: boolean; ancho?: boolean };
 
 const fmtMXN = (n: number) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(n);
 const fmtCorto = (n: number) => new Intl.NumberFormat("es-MX", { notation: "compact", maximumFractionDigits: 1 }).format(n);
 
 export default function Graficas({ bloques }: { bloques: Bloque[] }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {bloques.map((b) => (
-        <section key={b.titulo} className="card">
+        <section key={b.titulo} className={`card min-w-0 ${b.ancho ? "lg:col-span-2" : ""}`}>
           <h2 className="mb-3 font-semibold">{b.titulo}</h2>
           {b.datos.length === 0 ? (
             <p className="text-sm text-muted">Sin datos.</p>
@@ -28,7 +28,7 @@ export default function Graficas({ bloques }: { bloques: Bloque[] }) {
                   ) : (
                     <>
                       <XAxis type="number" allowDecimals={false} tickFormatter={b.tipo === "moneda" ? fmtCorto : undefined} tick={{ fontSize: 11, fill: "var(--muted)" }} stroke="var(--border)" />
-                      <YAxis type="category" dataKey="nombre" width={150} tick={{ fontSize: 12, fill: "var(--fg)" }} stroke="var(--border)" />
+                      <YAxis type="category" dataKey="nombre" width={b.ancho ? 130 : 150} tick={{ fontSize: 12, fill: "var(--fg)" }} stroke="var(--border)" />
                     </>
                   )}
                   <Tooltip

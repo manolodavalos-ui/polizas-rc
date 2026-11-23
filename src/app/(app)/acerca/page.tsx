@@ -15,7 +15,7 @@ export default function AcercaPage() {
           <img src="/integram.png" alt="INTEGRAM · Imagina, crea." className="mx-auto h-auto w-full max-w-md" />
         </div>
         <p className="text-sm font-medium text-muted">Desarrollado por INTEGRAM</p>
-        <div className="space-y-3 text-sm leading-relaxed">
+        <div className="space-y-3 text-justify text-sm leading-relaxed hyphens-auto" lang="es">
           <p>En INTEGRAM creemos que la tecnología debe adaptarse a las personas y a sus necesidades, no al contrario.</p>
           <p>
             Somos una empresa especializada en consultoría, desarrollo de soluciones digitales e integración de inteligencia

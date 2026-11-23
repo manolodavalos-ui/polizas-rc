@@ -13,6 +13,13 @@ function agrupar(polizas: Poliza[], key: (p: Poliza) => string, val: (p: Poliza)
   return [...m.entries()].map(([nombre, valor]) => ({ nombre, valor: Math.round(valor * 100) / 100 })).sort((a, b) => b.valor - a.valor);
 }
 
+// Primer nombre + primer apellido (asume dos apellidos al final)
+function nombreCorto(n: string) {
+  const w = (n ?? "").trim().split(/\s+/);
+  if (w.length <= 2) return w.join(" ");
+  return `${w[0]} ${w[w.length - 2]}`;
+}
+
 export default function GraficasPage() {
   const { data, error } = useCarga(() => Promise.all([listarPolizas(), getDiasAviso()]));
   if (!data) return <Cargando error={error} />;
@@ -46,6 +53,7 @@ export default function GraficasPage() {
           { titulo: "Vencimientos próximos 12 meses", datos: vencimientos, tipo: "conteo", vertical: true },
           { titulo: "Pólizas por aseguradora", datos: agrupar(polizas, (p) => p.aseguradora), tipo: "conteo" },
           { titulo: "Pólizas por estado", datos: estados, tipo: "conteo" },
+          { titulo: "Prima por asegurado", datos: agrupar(polizas, (p) => nombreCorto(p.asegurado_nombre ?? ""), (p) => p.prima ?? 0), tipo: "moneda", ancho: true },
         ]}
       />
     </div>
