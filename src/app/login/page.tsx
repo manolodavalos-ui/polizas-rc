@@ -18,8 +18,18 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.replace("/");
-    } catch {
-      setError("Correo o contraseña incorrectos.");
+    } catch (err) {
+      const code = (err as { code?: string }).code ?? "";
+      const msg: Record<string, string> = {
+        "auth/invalid-credential": "Correo o contraseña incorrectos.",
+        "auth/wrong-password": "Correo o contraseña incorrectos.",
+        "auth/user-not-found": "Ese correo no está registrado.",
+        "auth/invalid-email": "El correo no es válido.",
+        "auth/operation-not-allowed": "El acceso con correo y contraseña no está activado en Firebase.",
+        "auth/too-many-requests": "Demasiados intentos. Espera unos minutos.",
+        "auth/unauthorized-domain": "Este dominio no está autorizado en Firebase Authentication.",
+      };
+      setError(`${msg[code] ?? "No se pudo iniciar sesión."} (${code || "error"})`);
       setLoading(false);
     }
   }
