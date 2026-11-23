@@ -8,6 +8,7 @@
 export type Cambio = { version: string; fecha: string; cambios: string[] };
 
 export const CAMBIOS: Cambio[] = [
+  { version: "0.4.5", fecha: "2026-11-22", cambios: ["Salir ahora pregunta \"¿Desea cerrar la aplicación?\" y cierra la app sin cerrar sesión (cerrar sesión sigue en Configuración)."] },
   { version: "0.4.4", fecha: "2026-11-22", cambios: ["Gráficas: se muestran todos los nombres en Prima por asegurado.", "Control de versiones e historial de cambios."] },
   { version: "0.4.3", fecha: "2026-11-22", cambios: ["Acerca de: texto justificado sin dividir palabras."] },
   { version: "0.4.2", fecha: "2026-11-22", cambios: ["Botón Salir en la barra superior, a la derecha."] },

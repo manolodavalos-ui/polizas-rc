@@ -1,20 +1,10 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
 import { LogOut } from "lucide-react";
-import { auth } from "@/lib/firebase";
 
+/** Pide cerrar la aplicación (sin cerrar sesión). El diálogo lo muestra BotonAtras. */
 export default function BotonSalir({ className = "" }: { className?: string }) {
-  const router = useRouter();
   return (
-    <button
-      className={`btn-ghost text-rose-600 ${className}`}
-      onClick={async () => {
-        if (!confirm("¿Cerrar sesión?")) return;
-        await signOut(auth);
-        router.replace("/login");
-      }}
-    >
+    <button className={`btn-ghost text-rose-600 ${className}`} onClick={() => window.dispatchEvent(new Event("rc:salir"))}>
       <LogOut size={16} /> Salir
     </button>
   );
