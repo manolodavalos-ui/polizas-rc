@@ -10,6 +10,12 @@ export function useCarga<T>(fn: () => Promise<T>, deps: unknown[] = []) {
   useEffect(() => {
     fnRef.current = fn;
   });
+  // Cuando llegan datos nuevos de la nube, vuelve a leer (desde la copia local, al instante)
+  useEffect(() => {
+    const f = () => setN((x) => x + 1);
+    window.addEventListener("rc:datos", f);
+    return () => window.removeEventListener("rc:datos", f);
+  }, []);
   const clave = JSON.stringify(deps);
   useEffect(() => {
     let vivo = true;

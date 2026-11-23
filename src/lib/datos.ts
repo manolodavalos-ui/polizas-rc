@@ -1,6 +1,8 @@
 "use client";
 import {
-  addDoc, collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, serverTimestamp, setDoc, updateDoc, where, writeBatch,
+  addDoc, collection, deleteDoc, doc, getDoc, getDocFromCache, getDocFromServer, getDocs, getDocsFromCache, getDocsFromServer,
+  orderBy, query, serverTimestamp, setDoc, updateDoc, where, writeBatch,
+  type DocumentReference, type DocumentSnapshot, type Query, type QuerySnapshot,
 } from "firebase/firestore";
 import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { db, storage } from "./firebase";
@@ -9,9 +11,43 @@ import { rutaArchivo, type Asegurado, type Documento, type Poliza } from "./poli
 type ConId<T> = T & { id: string };
 const conId = <T,>(d: { id: string; data: () => unknown }) => ({ id: d.id, ...(d.data() as T) }) as ConId<T>;
 
+// ---------- Lectura rápida: primero la copia local, luego se actualiza desde la nube ----------
+const ultimaConsulta = new Map<string, number>();
+const huellaDocs = (s: QuerySnapshot) => s.docs.map((d) => d.id + JSON.stringify(d.data())).join("|");
+const huellaDoc = (s: DocumentSnapshot) => (s.exists() ? JSON.stringify(s.data()) : "-");
+function avisarCambio() {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("rc:datos"));
+}
+function refrescar(clave: string, tarea: () => Promise<boolean>) {
+  const t = ultimaConsulta.get(clave) ?? 0;
+  if (Date.now() - t < 30_000) return;
+  ultimaConsulta.set(clave, Date.now());
+  tarea().then((cambio) => cambio && avisarCambio()).catch(() => ultimaConsulta.delete(clave));
+}
+
+async function leerDocs(q: Query, clave: string): Promise<QuerySnapshot> {
+  const local = await getDocsFromCache(q).catch(() => null);
+  if (local && !local.empty) {
+    refrescar(clave, async () => huellaDocs(await getDocsFromServer(q)) !== huellaDocs(local));
+    return local;
+  }
+  ultimaConsulta.set(clave, Date.now());
+  return getDocs(q);
+}
+
+async function leerDoc(r: DocumentReference, clave: string): Promise<DocumentSnapshot> {
+  const local = await getDocFromCache(r).catch(() => null);
+  if (local && local.exists()) {
+    refrescar(clave, async () => huellaDoc(await getDocFromServer(r)) !== huellaDoc(local));
+    return local;
+  }
+  ultimaConsulta.set(clave, Date.now());
+  return getDoc(r);
+}
+
 // ---------- Configuración ----------
 export async function getDiasAviso(): Promise<number> {
-  const s = await getDoc(doc(db, "config", "general"));
+  const s = await leerDoc(doc(db, "config", "general"), "config");
   const n = Number(s.data()?.dias_aviso);
   return Number.isFinite(n) && n > 0 ? n : 30;
 }
@@ -19,11 +55,11 @@ export const setDiasAviso = (n: number) => setDoc(doc(db, "config", "general"), 
 
 // ---------- Asegurados ----------
 export async function listarAsegurados(): Promise<Asegurado[]> {
-  const s = await getDocs(query(collection(db, "asegurados"), orderBy("nombre")));
+  const s = await leerDocs(query(collection(db, "asegurados"), orderBy("nombre")), "asegurados");
   return s.docs.map((d) => conId<Omit<Asegurado, "id">>(d));
 }
 export async function getAsegurado(id: string): Promise<Asegurado | null> {
-  const s = await getDoc(doc(db, "asegurados", id));
+  const s = await leerDoc(doc(db, "asegurados", id), `asegurado/${id}`);
   return s.exists() ? conId<Omit<Asegurado, "id">>(s) : null;
 }
 export async function crearAsegurado(a: Omit<Asegurado, "id">): Promise<string> {
@@ -51,11 +87,11 @@ export async function listarPolizas(aseguradoId?: string): Promise<Poliza[]> {
   const q = aseguradoId
     ? query(collection(db, "polizas"), where("asegurado_id", "==", aseguradoId))
     : query(collection(db, "polizas"));
-  const s = await getDocs(q);
+  const s = await leerDocs(q, `polizas/${aseguradoId ?? "*"}`);
   return s.docs.map((d) => conId<Omit<Poliza, "id">>(d)).sort((a, b) => a.fin_vigencia.localeCompare(b.fin_vigencia));
 }
 export async function getPoliza(id: string): Promise<Poliza | null> {
-  const s = await getDoc(doc(db, "polizas", id));
+  const s = await leerDoc(doc(db, "polizas", id), `poliza/${id}`);
   return s.exists() ? conId<Omit<Poliza, "id">>(s) : null;
 }
 export async function crearPoliza(p: Omit<Poliza, "id">): Promise<string> {
@@ -77,7 +113,7 @@ export async function listarDocumentos(filtro: { poliza_id?: string; asegurado_i
   if (filtro.poliza_id) q = query(collection(db, "documentos"), where("poliza_id", "==", filtro.poliza_id));
   else if (filtro.asegurado_id) q = query(collection(db, "documentos"), where("asegurado_id", "==", filtro.asegurado_id), where("poliza_id", "==", null));
   else q = query(collection(db, "documentos"), where("asegurado_id", "==", null), where("poliza_id", "==", null));
-  const s = await getDocs(q);
+  const s = await leerDocs(q, `documentos/${JSON.stringify(filtro)}`);
   const docs = s.docs.map((d) => conId<Omit<Documento, "id">>(d)).sort((a, b) => a.nombre.localeCompare(b.nombre));
   return Promise.all(docs.map(async (d) => ({ ...d, url: await urlArchivo(d.storage_path) })));
 }
@@ -88,6 +124,8 @@ function leerUrls(): Record<string, string> {
   try { return JSON.parse(localStorage.getItem(URLS_KEY) ?? "{}"); } catch { return {}; }
 }
 export async function urlArchivo(path: string): Promise<string | null> {
+  const guardada = typeof window !== "undefined" ? leerUrls()[path] : undefined;
+  if (guardada) return guardada; // los enlaces de descarga no cambian
   try {
     const url = await getDownloadURL(ref(storage, path));
     try { const m = leerUrls(); if (m[path] !== url) { m[path] = url; localStorage.setItem(URLS_KEY, JSON.stringify(m)); } } catch {}
